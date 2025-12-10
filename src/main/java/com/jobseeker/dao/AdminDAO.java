@@ -1,33 +1,39 @@
 package com.jobseeker.dao;
 
-import java.sql.*;
 import com.jobseeker.config.DbUtil;
 import com.jobseeker.model.Admin;
 
+import java.sql.*;
+
 public class AdminDAO {
 
-    public boolean registerAdmin(Admin a) {
-        String sql = "INSERT INTO admin (name, email, password, role) VALUES (?, ?, ?, ?)";
+    // ---------------------------
+    // Insert new admin
+    // ---------------------------
+    public boolean insertAdmin(Admin admin) {
+        String sql = "INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)";
 
         try (Connection con = DbUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, a.getName());
-            ps.setString(2, a.getEmail());
-            ps.setString(3, a.getPassword());
-            ps.setString(4, a.getRole());
+            ps.setString(1, admin.getName());
+            ps.setString(2, admin.getEmail());
+            ps.setString(3, admin.getPasswordHash());
 
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
-    public Admin login(String email, String password) {
-        String sql = "SELECT * FROM admin WHERE email = ?";
-        
+    // ---------------------------
+    // Get admin by email
+    // ---------------------------
+    public Admin findByEmail(String email) {
+        String sql = "SELECT * FROM admins WHERE email = ?";
+
         try (Connection con = DbUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -35,13 +41,12 @@ public class AdminDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                Admin a = new Admin();
-                a.setId(rs.getInt("id"));
-                a.setName(rs.getString("name"));
-                a.setEmail(rs.getString("email"));
-                a.setPassword(rs.getString("password"));
-                a.setRole(rs.getString("role"));
-                return a;
+                Admin admin = new Admin();
+                admin.setId(rs.getInt("id"));
+                admin.setName(rs.getString("name"));
+                admin.setEmail(rs.getString("email"));
+                admin.setPasswordHash(rs.getString("password_hash"));
+                return admin;
             }
 
         } catch (Exception e) {

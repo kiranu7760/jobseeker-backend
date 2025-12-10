@@ -1,21 +1,19 @@
 package com.jobseeker.servlet;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import org.mindrot.jbcrypt.BCrypt;
-
 import com.jobseeker.dao.AdminDAO;
 import com.jobseeker.model.Admin;
+import org.mindrot.jbcrypt.BCrypt;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
+
+import java.io.IOException;
 
 @WebServlet("/api/admin/signup")
 public class AdminSignupServlet extends HttpServlet {
+
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
@@ -26,23 +24,27 @@ public class AdminSignupServlet extends HttpServlet {
         String email = req.getParameter("email");
         String password = req.getParameter("password");
 
+        if (name == null || email == null || password == null ||
+                name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+
+            resp.getWriter().write("{\"status\":\"error\",\"message\":\"Missing fields\"}");
+            return;
+        }
+
         String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
 
-        Admin a = new Admin();
-        a.setName(name);
-        a.setEmail(email);
-        a.setPassword(hashed);
-        a.setRole("ADMIN");
+        Admin admin = new Admin();
+        admin.setName(name);
+        admin.setEmail(email);
+        admin.setPasswordHash(hashed);
 
         AdminDAO dao = new AdminDAO();
-        boolean success = dao.registerAdmin(a);
+        boolean success = dao.insertAdmin(admin);
 
-        PrintWriter out = resp.getWriter();
         if (success) {
-            out.print("{\"status\":\"success\",\"message\":\"Admin registered\"}");
+            resp.getWriter().write("{\"status\":\"success\",\"message\":\"Admin registered successfully\"}");
         } else {
-            out.print("{\"status\":\"error\",\"message\":\"Failed to register admin\"}");
+            resp.getWriter().write("{\"status\":\"error\",\"message\":\"Failed or email exists\"}");
         }
     }
 }
-

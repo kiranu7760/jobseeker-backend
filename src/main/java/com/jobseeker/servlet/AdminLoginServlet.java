@@ -1,21 +1,20 @@
 package com.jobseeker.servlet;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import org.mindrot.jbcrypt.BCrypt;
-
 import com.jobseeker.dao.AdminDAO;
 import com.jobseeker.model.Admin;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
+
+import java.io.IOException;
 
 @WebServlet("/api/admin/login")
 public class AdminLoginServlet extends HttpServlet {
+
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
@@ -26,21 +25,23 @@ public class AdminLoginServlet extends HttpServlet {
         String password = req.getParameter("password");
 
         AdminDAO dao = new AdminDAO();
-        Admin a = dao.login(email, password);
+        Admin admin = dao.findByEmail(email);
 
-        PrintWriter out = resp.getWriter();
-
-        if (a == null) {
-            out.print("{\"status\":\"error\",\"message\":\"Admin not found\"}");
+        if (admin == null) {
+            resp.getWriter().write("{\"status\":\"error\",\"message\":\"Admin not found\"}");
             return;
         }
 
-        if (!BCrypt.checkpw(password, a.getPassword())) {
-            out.print("{\"status\":\"error\",\"message\":\"Incorrect password\"}");
+        boolean match = BCrypt.checkpw(password, admin.getPasswordHash());
+        if (!match) {
+            resp.getWriter().write("{\"status\":\"error\",\"message\":\"Invalid credentials\"}");
             return;
         }
 
-        out.print("{\"status\":\"success\",\"message\":\"Login successful\",\"admin\":\""
-                + a.getName() + "\"}");
+        HttpSession session = req.getSession(true);
+        session.setAttribute("adminId", admin.getId());
+        session.setAttribute("role", "ADMIN");
+
+        resp.getWriter().write("{\"status\":\"success\",\"message\":\"Admin login successful\"}");
     }
 }

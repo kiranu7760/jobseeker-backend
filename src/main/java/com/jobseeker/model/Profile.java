@@ -11,6 +11,8 @@ public class Profile {
     private String education;
     private String resumeText;
     private String linkedinUrl;
+    private String resume;
+
 
     // getters & setters
     public int getId() { return id; }
@@ -42,5 +44,9 @@ public class Profile {
 
     public String getLinkedinUrl() { return linkedinUrl; }
     public void setLinkedinUrl(String linkedinUrl) { this.linkedinUrl = linkedinUrl; }
+    
+    public String getResume() { return resume;}
+
+    public void setResume(String resume) {this.resume = resume;}
 }
 
