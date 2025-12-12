@@ -321,6 +321,57 @@ public class JobDAO {
 
 	    return list;
 	}
+	public int getTotalJobs() {
+	    String sql = "SELECT COUNT(*) AS total FROM jobs";
+
+	    try (Connection con = DbUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        if (rs.next()) return rs.getInt("total");
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return 0;
+	}
+	public List<Job> getRecentJobs(int days) {
+	    List<Job> list = new ArrayList<>();
+
+	    String sql = "SELECT * FROM jobs WHERE created_at >= NOW() - INTERVAL ? DAY ORDER BY created_at DESC";
+
+	    try (Connection con = DbUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setInt(1, days);
+	        ResultSet rs = ps.executeQuery();
+
+	        while (rs.next()) {
+	            Job j = new Job();
+	            j.setId(rs.getInt("id"));
+	            j.setTitle(rs.getString("title"));
+	            j.setCompany(rs.getString("company"));
+	            j.setLocation(rs.getString("location"));
+	            j.setDescription(rs.getString("description"));
+	            j.setRequiredSkills(rs.getString("required_skills"));
+	            j.setSalary(rs.getString("salary"));
+	            j.setType(rs.getString("type"));
+	            j.setSource(rs.getString("source"));
+	            j.setUrl(rs.getString("url"));
+	            j.setCompanyLogo(rs.getString("company_logo"));
+	            j.setCreatedAt(rs.getString("created_at"));
+
+	            list.add(j);
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    return list;
+	}
+
+
 
 
 }

@@ -2,7 +2,9 @@ package com.jobseeker.dao;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.jobseeker.config.DbUtil;
 import com.jobseeker.model.Application;
@@ -146,6 +148,92 @@ public class ApplicationDAO {
 	        e.printStackTrace();
 	        return false;
 	    }
+	}
+ public boolean withdraw(int userId, int jobId) {
+	    String sql = "DELETE FROM applications WHERE user_id = ? AND job_id = ?";
+	    try (Connection con = DbUtil.getConnection();
+	        PreparedStatement ps = con.prepareStatement(sql)) {
+	        
+	        ps.setInt(1, userId);
+	        ps.setInt(2, jobId);
+	        return ps.executeUpdate() > 0;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
+
+ public int getTotalApplications() {
+	    String sql = "SELECT COUNT(*) AS total FROM applications";
+
+	    try (Connection con = DbUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        if (rs.next()) return rs.getInt("total");
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return 0;
+	}
+ public int getTodayApplications() {
+	    String sql = "SELECT COUNT(*) AS total FROM applications WHERE DATE(applied_at) = CURDATE()";
+
+	    try (Connection con = DbUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        if (rs.next()) return rs.getInt("total");
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return 0;
+	}
+ public Map<String, Integer> getStatusSummary() {
+	    Map<String, Integer> map = new HashMap<>();
+
+	    String sql = "SELECT status, COUNT(*) AS count FROM applications GROUP BY status";
+
+	    try (Connection con = DbUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        while (rs.next()) {
+	            map.put(rs.getString("status"), rs.getInt("count"));
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    return map;
+	}
+ public List<Map<String, Object>> getApplicationsPerJob() {
+	    List<Map<String, Object>> list = new ArrayList<>();
+
+	    String sql = "SELECT j.id AS jobId, j.title, COUNT(a.id) AS applications "
+	               + "FROM jobs j LEFT JOIN applications a ON j.id = a.job_id "
+	               + "GROUP BY j.id, j.title ORDER BY applications DESC";
+
+	    try (Connection con = DbUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        while (rs.next()) {
+	            Map<String, Object> data = new HashMap<>();
+	            data.put("jobId", rs.getInt("jobId"));
+	            data.put("title", rs.getString("title"));
+	            data.put("applications", rs.getInt("applications"));
+	            list.add(data);
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    return list;
 	}
 
 
